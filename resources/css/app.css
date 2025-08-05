@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-weight: 500;
+}
+.bg-semi-black{
+    background-color: #060606;
+}
+.home-logo{
+    max-width: 128px;
+}
+.font-xs-2{
+    font-size: .625rem;
+}
