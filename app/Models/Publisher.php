@@ -14,7 +14,8 @@ class Publisher extends Model
         'user_id',
         'name',
         'bio',
-        'image'
+        'logo',
+        'slug'
     ];
 
     public function user(){

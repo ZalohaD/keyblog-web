@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Publisher;
@@ -9,16 +8,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\File;
 
-
-
 class RegisterController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         return view('auth.register');
     }
 
-
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $userData = $request->validate([
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
@@ -26,20 +24,7 @@ class RegisterController extends Controller
             'password_confirmation' => 'required|same:password',
         ]);
 
-        $publiserData = $request->validate([
-            'name' => 'required|max:255',
-            'logo' => ['required', File::types(['png', 'jpg', 'webp'])],
-        ]);
-
-        $user = User::create($userData);
-
-        $logoPath = $request->logo->store('logos');
-
-        $user->publisher()->create([
-            'name' => $publiserData['name'],
-            'logo' => $logoPath,
-            'slug' => Str::slug($publiserData['name']),
-        ]);
+        User::create($userData);
 
         Auth::attempt($request->only('email', 'password'));
 

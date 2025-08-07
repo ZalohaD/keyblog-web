@@ -22,9 +22,16 @@
               <a href="">Blog</a>
               <a href="">Contact Us</a>
           </div>
+          @auth
+              <div>
+                  <a href="{{route('dashboard.index')}}">Dashboard</a>
+              </div>
+          @endauth
+          @guest
           <div>
               <a href="{{route('register.index')}}">Start posting</a>
           </div>
+          @endguest
       </nav>
       <main class="mt-10 max-w-[986px] mx-auto">
           {{$slot}}

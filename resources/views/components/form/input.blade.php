@@ -1,4 +1,4 @@
-@props(['label', 'name'])
+@props(['label', 'name', 'as' => 'input'])
 
 @php
     $defaults = [
@@ -11,5 +11,5 @@
 @endphp
 
 <x-form.field :$label :$name>
-    <input {{$attributes($defaults)}}>
+    <{{$as}} {{$attributes($defaults)}}> @if($as === 'textarea')</{{$as}}> @endif
 </x-form.field>

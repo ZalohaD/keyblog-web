@@ -1,4 +1,4 @@
-<x-layout>
+<x-layouts.layout>
     <section class="max-w-3xl mx-auto py-16 px-6 text-white">
         <h1 class="text-5xl font-extrabold mb-8">Про нас</h1>
 
@@ -61,4 +61,4 @@
             </p>
         </x-panel>
     </section>
-</x-layout>
+</x-layouts.layout>

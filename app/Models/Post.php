@@ -11,9 +11,12 @@ class Post extends Model
     use HasFactory;
 
     protected $fillable = [
+        'publisher_id',
         'title',
         'description',
         'image',
+        'slug',
+
     ];
 
     public function publisher()
@@ -23,5 +26,10 @@ class Post extends Model
 
     public function tags(){
         return $this->belongsToMany(Tag::class);
+    }
+
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_posts')->withTimestamps();
     }
 }

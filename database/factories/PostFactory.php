@@ -17,12 +17,13 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $this->faker->name())));
+        $title = $this->faker->sentence(4);
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
 
 
         return [
             'publisher_id' => Publisher::factory(),
-            'title' => $this->faker->name(),
+            'title' => $title,
             'description' => $this->faker->text(255),
             'image' => $this->faker->imageUrl(),
             'slug' => $slug,
