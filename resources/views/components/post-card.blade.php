@@ -25,13 +25,20 @@
             @endforeach
         </div>
 
-        <x-publisher-logo :width="42" />
+        <x-publisher-logo :publisher="$post->publisher" :width="42" />
     </div>
     @if(request()->routeIs('dashboard.posts.myposts'))
-    <div class="pt-5"  style="max-width: 5rem;">
-    <a href="/" class="font-bold bg-blue-800 text-white rounded-xl py-2 px-6 w-full">
-        Edit
-    </a>
+    <div class="pt-5 flex gap-2">
+        <a href="{{ route('dashboard.posts.edit', $post) }}" class="font-bold bg-blue-800 text-white rounded-xl py-2 px-4">
+            Edit
+        </a>
+        <form method="POST" action="{{ route('dashboard.posts.destroy', $post) }}" onsubmit="return confirm('Are you sure you want to delete this post?');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="font-bold bg-red-800 text-white rounded-xl py-2 px-4">
+                Delete
+            </button>
+        </form>
     </div>
     @endif
 

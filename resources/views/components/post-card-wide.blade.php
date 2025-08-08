@@ -2,7 +2,7 @@
 
 <x-panel class="flex flex-row gap-x-6">
     <div>
-        <x-publisher-logo />
+        <x-publisher-logo :publisher="$post->publisher" />
     </div>
 
     <div class="flex-1 flex flex-col">

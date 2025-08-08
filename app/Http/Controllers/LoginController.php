@@ -1,13 +1,18 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     public function index()
     {
         return view('auth.login');
@@ -20,19 +25,14 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if (!Auth::attempt($validatedData)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
-        }
+        $this->authService->login($validatedData);
 
-        $request->session()->regenerate();
         return redirect()->intended('/');
     }
 
     public function destroy()
     {
-        Auth::logout();
+        $this->authService->logout();
         return redirect()->route('home');
     }
 }

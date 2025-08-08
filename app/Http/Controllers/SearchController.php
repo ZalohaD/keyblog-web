@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Post;
+use App\Services\SearchService;
 use Illuminate\Http\Request;
-
 
 class SearchController extends Controller
 {
+    protected SearchService $searchService;
+
+    public function __construct(SearchService $searchService)
+    {
+        $this->searchService = $searchService;
+    }
+
     public function index(Request $request)
     {
         $search = $request->get('search');
@@ -16,10 +22,7 @@ class SearchController extends Controller
             return view('pages.search', ['results' => collect(), 'search' => '']);
         }
 
-        $results = Post::where('title', 'like', '%' . $search . '%')
-            ->orWhere('description', 'like', '%' . $search . '%')
-            ->with('publisher')
-            ->get();
+        $results = $this->searchService->searchPosts($search);
 
         return view('pages.search', compact('results', 'search'));
     }

@@ -1,15 +1,18 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Publisher;
-use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\File;
 
 class RegisterController extends Controller
 {
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     public function index()
     {
         return view('auth.register');
@@ -24,9 +27,7 @@ class RegisterController extends Controller
             'password_confirmation' => 'required|same:password',
         ]);
 
-        User::create($userData);
-
-        Auth::attempt($request->only('email', 'password'));
+        $this->authService->register($userData);
 
         return redirect('/');
     }

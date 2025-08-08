@@ -3,21 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Models\Publisher;
-use App\Models\Tag;
+use App\Services\PostService;
+use App\Services\PublisherService;
+use App\Services\TagService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Mews\Purifier\Facades\Purifier;
 
 class PostController extends Controller
 {
+    protected PostService $postService;
+    protected TagService $tagService;
+    protected PublisherService $publisherService;
+    protected UserService $userService;
+
+    public function __construct(
+        PostService $postService,
+        TagService $tagService,
+        PublisherService $publisherService,
+        UserService $userService
+    ) {
+        $this->postService = $postService;
+        $this->tagService = $tagService;
+        $this->publisherService = $publisherService;
+        $this->userService = $userService;
+    }
 
     public function index()
     {
-        $featuredPosts = Post::with('publisher')->where('featured', 1)->limit(6)->get();
-        $posts = Post::with('publisher')->latest()->paginate(10);
-        $tags = Tag::all();
+        $featuredPosts = $this->postService->featured();
+        $posts = $this->postService->all();
+        $tags = $this->tagService->getAllTags();
 
         return view('pages.home', [
             'posts' => $posts,
@@ -26,26 +41,84 @@ class PostController extends Controller
         ]);
     }
 
-
     public function create()
     {
-        $publisher = Auth::user()->publisher;
-
-        if (!$publisher) {
-            return redirect()->route('dashboard.publisher.create')
-                ->with('error', 'You need to create a publisher profile first.');
-        }
-
-        $tags = Tag::all();
+        $publisher = $this->publisherService->getCurrentUserPublisher();
+        $tags = $this->tagService->getAllTags();
 
         return view('dashboard.posts.create', compact('publisher', 'tags'));
     }
 
-
-
     public function store(Request $request)
     {
-        $publisher = Auth::user()->publisher;
+        $validatedContent = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
+        ]);
+
+        try {
+            $this->postService->createPost($validatedContent);
+            return redirect()->route('dashboard.posts.create');
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard.publisher.create')->with('error', $e->getMessage());
+        }
+    }
+
+    public function show(Post $post)
+    {
+        return view('pages.post-show', compact('post'));
+    }
+
+    public function destroy($id)
+    {
+        $this->postService->deletePost($id);
+        return redirect()->back()->with('success', 'Post deleted successfully.');
+    }
+
+    public function toggleSave(Post $post)
+    {
+        $saved = $this->postService->toggleSavePost($post);
+        $message = $saved ? 'Post saved successfully.' : 'Post removed from saved posts.';
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    public function savedPosts()
+    {
+        $savedPosts = $this->userService->getSavedPosts();
+        return view('dashboard.posts.saved', compact('savedPosts'));
+    }
+
+    public function myPosts()
+    {
+        $posts = $this->postService->getPublisherPosts();
+        return view('dashboard.posts.my-posts', compact('posts'));
+    }
+
+    public function edit(Post $post)
+    {
+        $publisher = $this->publisherService->getCurrentUserPublisher();
+
+        if ($post->publisher_id !== $publisher->id) {
+            return redirect()->route('dashboard.posts.myposts')->with('error', 'You can only edit your own posts.');
+        }
+
+        $tags = $this->tagService->getAllTags();
+        $selectedTags = $post->tags->pluck('id')->toArray();
+
+        return view('dashboard.posts.edit', compact('post', 'publisher', 'tags', 'selectedTags'));
+    }
+
+    public function update(Request $request, Post $post)
+    {
+        $publisher = $this->publisherService->getCurrentUserPublisher();
+
+        if ($post->publisher_id !== $publisher->id) {
+            return redirect()->route('dashboard.posts.myposts')->with('error', 'You can only update your own posts.');
+        }
 
         $validatedContent = $request->validate([
             'title' => 'required|string|max:255',
@@ -55,68 +128,11 @@ class PostController extends Controller
             'tags.*' => 'exists:tags,id',
         ]);
 
-        $cleanedContent = Purifier::clean($validatedContent['description']);
-
-        $imagePath = $request->file('image') ? $request->file('image')->store('images', 'public') : null;
-
-        $post = Post::create([
-            'title' => $validatedContent['title'],
-            'description' => $cleanedContent,
-            'image' => $imagePath,
-            'publisher_id' => $publisher->id,
-            'slug' => Str::slug($validatedContent['title']),
-        ]);
-
-        if (!empty($validatedContent['tags'])) {
-            $post->tags()->attach($validatedContent['tags']);
+        try {
+            $this->postService->updatePost($post, $validatedContent);
+            return redirect()->route('dashboard.posts.myposts')->with('success', 'Post updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
-        return redirect()->route('dashboard.posts.create');
-    }
-
-
-    public function show(Post $post)
-    {
-        return view('pages.post-show', compact('post'));
-    }
-
-
-    public function destroy($id)
-    {
-        // TODO: Implement post deletion
-    }
-
-
-    public function toggleSave(Post $post)
-    {
-        $user = auth()->user();
-
-        if ($user->savedPosts()->where('post_id', $post->id)->exists()) {
-            $user->savedPosts()->detach($post->id);
-            $message = 'Post removed from saved posts.';
-        } else {
-            $user->savedPosts()->attach($post->id);
-            $message = 'Post saved successfully.';
-        }
-
-        return redirect()->back()->with('success', $message);
-    }
-
-
-    public function savedPosts()
-    {
-        $user = Auth::user();
-        $savedPosts = $user->savedPosts()->latest()->paginate(10);
-
-        return view('dashboard.posts.saved', compact('savedPosts'));
-    }
-
-    public function myPosts()
-    {
-        $publisher = Auth::user()->publisher;
-        $posts = $publisher->posts()->latest()->paginate(10);
-
-        return view('dashboard.posts.my-posts', compact('posts'));
-
-
     }
 }

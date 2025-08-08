@@ -24,7 +24,8 @@ class Post extends Model
         return $this->belongsTo(Publisher::class);
     }
 
-    public function tags(){
+    public function tags()
+    {
         return $this->belongsToMany(Tag::class);
     }
 

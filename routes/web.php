@@ -7,6 +7,7 @@ use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TagController;
+use App\Http\Middleware\PublisherMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PostController::class, 'index'])->name('home');
@@ -32,10 +33,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/publisher', [PublisherController::class, 'create'])->name('publisher.create');
         Route::post('/publisher', [PublisherController::class, 'store'])->name('publisher.store');
 
-        Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
-        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        Route::middleware([PublisherMiddleware::class])->group(function () {
+            Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+            Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+            Route::get('/posts/myposts', [PostController::class, 'myPosts'])->name('posts.myposts');
+            Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+            Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+            Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        });
+
         Route::get('/posts/saved', [PostController::class, 'savedPosts'])->name('posts.saved');
-        Route::get('/posts/myposts', [PostController::class, 'myPosts'])->name('posts.myposts');
     });
 
     Route::post('/posts/{post}/toggle-save', [PostController::class, 'toggleSave'])->name('posts.toggle_save');
