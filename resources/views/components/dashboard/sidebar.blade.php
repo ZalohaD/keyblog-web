@@ -53,7 +53,6 @@
         @endif
         <div class="pt-4 mt-4 border-t border-gray-700">
             <form method="POST" action="{{route('logout')}}">
-                @method('DELETE')
                 @csrf
                 <button type="submit" class="group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-red-400 hover:text-red-300 hover:bg-red-900/20">
                     <svg class="w-5 h-5 mr-3 text-red-500 group-hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
